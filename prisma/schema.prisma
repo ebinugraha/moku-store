@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
+}
+
+model Store {
+  id         String     @id @default(uuid())
+  name       String
+  userId     String
+  billboards Banner[]   @relation("StoreToBillboard")
+  categories Category[] @relation("StoreToCategory")
+  colors     Color[]    @relation("StoreToColor")
+  sizes      Size[]     @relation("StoreToSize")
+  product    Product[]  @relation("StoreToProduct")
+  orders    Order[]  @relation("StoreToOrder")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Banner {
+  id         String     @id @default(uuid())
+  storeId    String
+  store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id])
+  label      String
+  imageUrl   String
+  categories Category[] @relation("BannerToCategory")
+  createdAt  DateTime   @default(now())
+  updated    DateTime   @updatedAt
+
+  @@index([storeId])
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  storeId   String
+  store     Store     @relation("StoreToCategory", fields: [storeId], references: [id])
+  banner    Banner    @relation("BannerToCategory", fields: [bannerId], references: [id])
+  bannerId  String
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Product   Product[] @relation("CategoryToProduct")
+
+  @@index([storeId, bannerId])
+}
+
+model Size {
+  id        String    @id @default(uuid())
+  label     String
+  value     String
+  storeId   String
+  store     Store     @relation("StoreToSize", fields: [storeId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Product   Product[]
+
+  @@index([storeId])
+}
+
+model Color {
+  id        String    @id @default(uuid())
+  label     String
+  value     String
+  storeId   String
+  store     Store     @relation("StoreToColor", fields: [storeId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Product   Product[]
+
+  @@index([storeId])
+}
+
+model Product {
+  id         String  @id @default(uuid())
+  name       String
+  price      Decimal
+  isFeatured Boolean @default(false)
+  isArchived Boolean @default(false)
+  storeId    String
+  categoryId String
+  sizeId     String
+  colorId    String
+
+  store    Store    @relation("StoreToProduct", fields: [storeId], references: [id])
+  category Category @relation("CategoryToProduct", fields: [categoryId], references: [id])
+  size     Size     @relation(fields: [sizeId], references: [id])
+  color    Color    @relation(fields: [colorId], references: [id])
+
+  images Images[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId, categoryId, sizeId, colorId])
+}
+
+model Images {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model Order {
+  id String @id @default(uuid())
+  storeId String
+  store Store @relation("StoreToOrder", fields: [storeId], references: [id])
+  orderItems OrderItem[]
+  isPaid Boolean @default(false)
+  phone String @default("")
+  address String @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  productId String
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId, productId])
+}
