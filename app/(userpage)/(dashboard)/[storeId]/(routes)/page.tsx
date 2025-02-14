@@ -1,6 +1,8 @@
+import { getGraphRevenue } from "@/actions/get-graph-revenue";
 import { getTotalRevenue } from "@/actions/get-total-revenue";
 import { getTotalSales } from "@/actions/get-total-sales";
 import { getTotalStock } from "@/actions/get-total-stock";
+import { Cart } from "@/components/dashboard/cart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +19,7 @@ const DashboardPage = async ({ params }: dashboardPage) => {
   const totalRevenue = await getTotalRevenue(storeId);
   const salesCount = await getTotalSales(storeId);
   const stockCount = await getTotalStock(storeId);
+  const graph = await getGraphRevenue(storeId)
 
   return (
     <div className="flex-col">
@@ -53,6 +56,14 @@ const DashboardPage = async ({ params }: dashboardPage) => {
             </CardContent>
           </Card>
         </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-4">
+            <CardTitle className="text-sm">Total Produk Di Gudang</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Cart data={graph} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
